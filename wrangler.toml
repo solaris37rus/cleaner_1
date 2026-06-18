@@ -1,0 +1,7 @@
+name = "cleaner-ivanovo"
+compatibility_date = "2026-06-18"
+pages_build_output_dir = "dist"
+
+[vars]
+# Public/non-secret variables can be placed here if needed.
+# Secrets TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set in Cloudflare Pages settings.
