@@ -1,11 +1,14 @@
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import Services from "./components/Services";
+import TrustStrip from "./components/TrustStrip";
 import Benefits from "./components/Benefits";
+import PriceGuide from "./components/PriceGuide";
 import PriceCalculator from "./components/PriceCalculator";
 import HowItWorks from "./components/HowItWorks";
 import FAQ from "./components/FAQ";
 import Contacts from "./components/Contacts";
+import StickyMobileCTA from "./components/StickyMobileCTA";
 import Footer from "./components/Footer";
 
 function App() {
@@ -14,14 +17,17 @@ function App() {
       <Header />
       <main className="flex-grow">
         <Hero />
+        <TrustStrip />
         <Services />
         <Benefits />
+        <PriceGuide />
         <PriceCalculator />
         <HowItWorks />
         <FAQ />
         <Contacts />
       </main>
       <Footer />
+      <StickyMobileCTA />
     </div>
   );
 }

@@ -1,15 +1,14 @@
 {
-  "name": "cleaning-ivanovo-cloudflare",
+  "name": "cleaning-ivanovo-github-pages",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0",
-    "cf:dev": "npm run build && npx wrangler pages dev dist --compatibility-date=2026-06-18",
-    "cf:deploy": "npm run build && npx wrangler pages deploy dist"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "lucide-react": "^1.20.0",
@@ -18,7 +17,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

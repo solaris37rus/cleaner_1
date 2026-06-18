@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, Loader2, AlertCircle, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertCircle, Copy, ExternalLink, MessageCircle, Send } from "lucide-react";
 import type { CalculatorState } from "./PriceCalculator";
 
 interface LeadFormProps {
@@ -7,7 +7,7 @@ interface LeadFormProps {
   onBack: () => void;
 }
 
-type SubmitStatus = "idle" | "loading" | "success" | "error";
+type SubmitStatus = "idle" | "success" | "error";
 
 const telegramUrl = "https://t.me/gyrman37";
 const vkUrl = "https://vk.com/bread_1996";
@@ -38,24 +38,6 @@ export default function LeadForm({ calculatorState, onBack }: LeadFormProps) {
     setFormData((prev) => ({ ...prev, [name]: name === "phone" ? formatPhoneNumber(value) : value }));
   };
 
-  const leadPayload = useMemo(() => ({
-    ...formData,
-    order: {
-      roomType: calculatorState.roomType,
-      area: calculatorState.area,
-      serviceType: calculatorState.serviceType,
-      windowsCount: calculatorState.windowsCount,
-      extras: calculatorState.extras.map((extra) => ({
-        name: extra.name,
-        price: extra.price,
-        type: extra.type,
-        count: extra.count,
-      })),
-      complexDirt: calculatorState.complexDirt,
-      total: calculatorState.total,
-    },
-  }), [calculatorState, formData]);
-
   const messageText = useMemo(() => {
     const { roomType, area, serviceType, windowsCount, extras, complexDirt, total } = calculatorState;
     const measure = serviceType === "Мойка окон" ? `${windowsCount} створок` : `${area} м²`;
@@ -64,25 +46,26 @@ export default function LeadForm({ calculatorState, onBack }: LeadFormProps) {
       : "Не выбраны";
 
     return [
-      "Новая заявка на клининг — Иваново",
+      "🧽 Новая заявка на клининг — Иваново",
       "",
-      `ФИО: ${formData.name || "Не указано"}`,
-      `Телефон: ${formData.phone || "Не указан"}`,
-      `Адрес: ${formData.address || "Не указан"}`,
-      `Дата/время: ${formData.date || "Не указана"}`,
+      `👤 ФИО: ${formData.name || "Не указано"}`,
+      `📞 Телефон: ${formData.phone || "Не указан"}`,
+      `📍 Адрес: ${formData.address || "Не указан"}`,
+      `📅 Дата/время: ${formData.date || "Не указана"}`,
       "",
-      `Тип помещения: ${roomType}`,
-      `Основная услуга: ${serviceType}`,
-      serviceType === "Мойка окон" ? `Количество створок: ${measure}` : `Площадь: ${measure}`,
-      `Сложное загрязнение: ${complexDirt ? "Да, +20%" : "Нет"}`,
+      `🏠 Тип помещения: ${roomType}`,
+      `🧹 Основная услуга: ${serviceType}`,
+      serviceType === "Мойка окон" ? `🪟 Количество створок: ${measure}` : `📐 Площадь: ${measure}`,
+      `⚠️ Сложное загрязнение: ${complexDirt ? "Да, +20%" : "Нет"}`,
       "",
-      "Дополнительные услуги:",
+      "➕ Дополнительные услуги:",
       extrasText,
       "",
-      `Комментарий: ${formData.comment || "Без комментария"}`,
-      `Предварительная стоимость: ~ ${total.toLocaleString("ru-RU")} ₽`,
+      `💬 Комментарий: ${formData.comment || "Без комментария"}`,
+      `💰 Предварительная стоимость: ~ ${total.toLocaleString("ru-RU")} ₽`,
       "",
       "Цена предварительная. Итог зависит от объёма работ, степени загрязнения и дополнительных пожеланий.",
+      "Источник: сайт GitHub Pages",
     ].join("\n");
   }, [calculatorState, formData]);
 
@@ -99,9 +82,11 @@ export default function LeadForm({ calculatorState, onBack }: LeadFormProps) {
       await navigator.clipboard.writeText(messageText);
       setCopyLabel("Заявка скопирована");
       window.setTimeout(() => setCopyLabel("Скопировать заявку"), 1800);
+      return true;
     } catch {
-      setCopyLabel("Не удалось скопировать");
-      window.setTimeout(() => setCopyLabel("Скопировать заявку"), 1800);
+      setCopyLabel("Скопируйте вручную ниже");
+      window.setTimeout(() => setCopyLabel("Скопировать заявку"), 2200);
+      return false;
     }
   };
 
@@ -115,43 +100,37 @@ export default function LeadForm({ calculatorState, onBack }: LeadFormProps) {
       return;
     }
 
-    setStatus("loading");
-    setErrorMessage("");
-
-    try {
-      const response = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(leadPayload),
-      });
-      const result = await response.json().catch(() => ({})) as { success?: boolean; error?: string };
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Не удалось отправить заявку");
-      }
-
-      setStatus("success");
-    } catch (error) {
-      setStatus("error");
-      setErrorMessage(error instanceof Error ? error.message : "Не удалось отправить заявку");
-    }
+    await handleCopy();
+    setStatus("success");
   };
+
+  const contactButtons = (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary w-full bg-sky-500 hover:bg-sky-600 text-sm">
+        <MessageCircle className="w-4 h-4" /> Открыть Telegram <ExternalLink className="w-4 h-4" />
+      </a>
+      <a href={vkUrl} target="_blank" rel="noopener noreferrer" className="btn-primary w-full bg-blue-600 hover:bg-blue-700 text-sm">
+        VK <ExternalLink className="w-4 h-4" />
+      </a>
+    </div>
+  );
 
   if (status === "success") {
     return (
-      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-primary-100 text-center">
+      <div className="premium-card p-6 md:p-8 text-center">
         <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 className="w-8 h-8 text-primary-500" />
         </div>
-        <h3 className="text-2xl font-bold text-slate-900 mb-4">Заявка отправлена!</h3>
-        <p className="text-slate-600 mb-8">
-          Спасибо за обращение. Мы свяжемся с вами в ближайшее время по указанному номеру.
+        <h3 className="text-2xl font-black text-slate-900 mb-3">Заявка готова</h3>
+        <p className="text-slate-600 mb-6">
+          GitHub Pages — статический хостинг, поэтому сайт не хранит токены и не отправляет сообщение сам. Текст заявки уже скопирован: откройте Telegram или VK и вставьте его в сообщение.
         </p>
-        <div className="flex flex-col gap-3">
-          <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-outline w-full">
-            Открыть Telegram
-          </a>
-          <button onClick={onBack} className="text-sm font-semibold text-primary-700 hover:text-primary-800">
+        <div className="space-y-3">
+          {contactButtons}
+          <button type="button" onClick={handleCopy} className="btn-outline w-full text-sm">
+            <Copy className="w-4 h-4" /> {copyLabel}
+          </button>
+          <button onClick={onBack} className="text-sm font-bold text-primary-700 hover:text-primary-800" type="button">
             Вернуться к расчёту
           </button>
         </div>
@@ -160,71 +139,68 @@ export default function LeadForm({ calculatorState, onBack }: LeadFormProps) {
   }
 
   return (
-    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-primary-100">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-slate-500 hover:text-primary-600 transition-colors mb-6" type="button">
+    <div className="premium-card p-6 md:p-8">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary-600 transition-colors mb-6" type="button">
         <ArrowLeft className="w-4 h-4" /> Назад к расчёту
       </button>
 
-      <h3 className="text-xl font-bold text-slate-900 mb-2">Оформление заявки</h3>
+      <h3 className="text-2xl font-black text-slate-900 mb-2">Оформление заявки</h3>
       <p className="text-sm text-slate-500 mb-6 border-b border-slate-100 pb-4">
-        Выбранные услуги и предварительная стоимость уже добавлены в заявку.
+        Заполните контакты. Сайт подготовит готовый текст заявки, который можно отправить в Telegram или VK.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="lead-name">ФИО *</label>
-          <input id="lead-name" type="text" name="name" required value={formData.name} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Иван Иванов" autoComplete="name" />
+          <label className="block text-sm font-bold text-slate-700 mb-1" htmlFor="lead-name">ФИО *</label>
+          <input id="lead-name" type="text" name="name" required value={formData.name} onChange={handleChange} className="field-input" placeholder="Иван Иванов" autoComplete="name" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="lead-phone">Телефон *</label>
-          <input id="lead-phone" type="tel" name="phone" required value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="+7 (999) 000-00-00" autoComplete="tel" />
+          <label className="block text-sm font-bold text-slate-700 mb-1" htmlFor="lead-phone">Телефон *</label>
+          <input id="lead-phone" type="tel" name="phone" required value={formData.phone} onChange={handleChange} className="field-input" placeholder="+7 (999) 000-00-00" autoComplete="tel" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="lead-address">Адрес *</label>
-          <input id="lead-address" type="text" name="address" required value={formData.address} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Иваново, ул. Ленина, д. 1" autoComplete="street-address" />
+          <label className="block text-sm font-bold text-slate-700 mb-1" htmlFor="lead-address">Адрес *</label>
+          <input id="lead-address" type="text" name="address" required value={formData.address} onChange={handleChange} className="field-input" placeholder="Иваново, ул. Ленина, д. 1" autoComplete="street-address" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="lead-date">Желаемая дата и время</label>
-          <input id="lead-date" type="text" name="date" value={formData.date} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Например: завтра в 10:00" />
+          <label className="block text-sm font-bold text-slate-700 mb-1" htmlFor="lead-date">Желаемая дата и время</label>
+          <input id="lead-date" type="text" name="date" value={formData.date} onChange={handleChange} className="field-input" placeholder="Например: завтра в 10:00" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="lead-comment">Комментарий</label>
-          <textarea id="lead-comment" name="comment" rows={3} value={formData.comment} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none resize-none" placeholder="Особенности помещения, подъезд, домофон, пожелания"></textarea>
+          <label className="block text-sm font-bold text-slate-700 mb-1" htmlFor="lead-comment">Комментарий</label>
+          <textarea id="lead-comment" name="comment" rows={3} value={formData.comment} onChange={handleChange} className="field-input resize-none" placeholder="Особенности помещения, подъезд, домофон, пожелания" />
         </div>
 
-        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 text-sm text-slate-700">
+        <div className="rounded-2xl bg-primary-50 border border-primary-100 p-4 text-sm text-slate-700">
           <div className="flex items-center justify-between gap-3 mb-2">
-            <span className="font-semibold text-slate-900">Предварительный итог</span>
+            <span className="font-black text-slate-900">Предварительный итог</span>
             <span className="font-black text-primary-700">~ {calculatorState.total.toLocaleString("ru-RU")} ₽</span>
           </div>
           <p className="text-xs text-slate-500">
-            Цена предварительная и будет подтверждена после уточнения объёма работ.
+            Финальную стоимость подтверждаем после уточнения объёма работ и степени загрязнения.
           </p>
         </div>
 
         {status === "error" && (
-          <div className="p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 flex flex-col gap-3">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-              <span>{errorMessage || "Ошибка отправки. Можно связаться напрямую и отправить скопированный текст заявки."}</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className="btn-primary w-full bg-sky-500 hover:bg-sky-600 text-sm">
-                Telegram <ExternalLink className="w-4 h-4 ml-2" />
-              </a>
-              <a href={vkUrl} target="_blank" rel="noopener noreferrer" className="btn-primary w-full bg-blue-600 hover:bg-blue-700 text-sm">
-                VK <ExternalLink className="w-4 h-4 ml-2" />
-              </a>
-            </div>
-            <button type="button" onClick={handleCopy} className="btn-outline w-full bg-white text-sm">
-              <Copy className="w-4 h-4 mr-2" /> {copyLabel}
-            </button>
+          <div className="p-4 bg-red-50 text-red-700 rounded-2xl text-sm border border-red-100 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <span>{errorMessage}</span>
           </div>
         )}
 
-        <button type="submit" disabled={status === "loading"} className="btn-primary w-full py-4 text-base mt-2 disabled:opacity-70 disabled:cursor-not-allowed">
-          {status === "loading" ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Отправка...</> : "Отправить заявку"}
+        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+          <div className="flex items-center gap-2 mb-2 font-black text-slate-900">
+            <Send className="h-4 w-4 text-primary-600" /> Что произойдёт после кнопки
+          </div>
+          <p className="text-xs leading-relaxed text-slate-500">
+            Сайт скопирует текст заявки. Затем откройте Telegram или VK и вставьте сообщение. Так сайт работает бесплатно на GitHub Pages и открывается без backend.
+          </p>
+        </div>
+
+        <button type="submit" className="btn-primary w-full py-4 text-base mt-2">
+          <Copy className="w-5 h-5" /> Скопировать заявку
         </button>
+        {contactButtons}
       </form>
     </div>
   );

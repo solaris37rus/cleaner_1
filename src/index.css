@@ -3,12 +3,16 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply text-slate-800 bg-white antialiased font-sans;
-  }
-
   html {
     scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-slate-800 antialiased font-sans;
+  }
+
+  ::selection {
+    @apply bg-primary-200 text-primary-950;
   }
 }
 
@@ -22,10 +26,26 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-bold rounded-2xl shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 active:scale-[0.98];
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center px-6 py-3 border-2 border-slate-200 text-base font-medium rounded-xl text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-slate-200 text-base font-bold rounded-2xl text-slate-700 bg-white hover:bg-slate-50 hover:border-primary-200 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 active:scale-[0.98];
+  }
+
+  .soft-card {
+    @apply rounded-3xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .premium-card {
+    @apply rounded-3xl border border-primary-100 bg-white shadow-xl shadow-primary-900/5;
+  }
+
+  .field-input {
+    @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-primary-400 focus:ring-4 focus:ring-primary-100;
+  }
+
+  .badge-soft {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-bold text-primary-800;
   }
 }
